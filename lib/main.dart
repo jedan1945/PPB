@@ -15,63 +15,73 @@ import 'widgets/productCard.dart';
 // Import widget CollectionBanner dari file collectionBanner.dart
 import 'widgets/collectionBanner.dart';
 
+// Import halaman Cart dari folder pages
+import 'pages/cartPage.dart';
+
 void main() {
-  // Menjalankan aplikasi Flutter
+  // Menjalankan aplikasi Flutter.
   runApp(const TCGCardShopApp());
 }
 
-// Widget MaterialApp digunakan sebagai struktur utama aplikasi Flutter.
+// Widget MaterialApp digunakan sebagai struktur utama aplikasi.
 class TCGCardShopApp extends StatelessWidget {
   const TCGCardShopApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Menghilangkan tulisan DEBUG pada pojok kanan atas.
+      // Menghilangkan banner DEBUG pada pojok kanan atas.
       debugShowCheckedModeBanner: false,
 
-      // Memberikan nama pada aplikasi.
+      // Memberikan nama aplikasi.
       title: 'TCG Card Shop',
 
-      // Widget Scaffold digunakan sebagai struktur dasar halaman aplikasi.
+      // Menampilkan halaman HomePage sebagai halaman pertama.
       home: const HomePage(),
     );
   }
 }
 
-// Widget StatelessWidget digunakan karena halaman utama
-// tidak memiliki data yang berubah secara langsung.
-class HomePage extends StatelessWidget {
+// Widget HomePage digunakan sebagai halaman utama aplikasi.
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+// State digunakan karena BottomNavigationBar akan berubah
+// ketika pengguna memilih menu yang berbeda.
+class _HomePageState extends State<HomePage> {
+  // Menyimpan index halaman navigation yang sedang dipilih.
+  int selectedIndex = 0;
+
+  @override
   Widget build(BuildContext context) {
-    // Widget Scaffold digunakan sebagai struktur dasar homepage.
     return Scaffold(
-      // Widget SafeArea digunakan agar isi aplikasi tidak
-      // tertutup oleh status bar perangkat.
+      // Widget SafeArea digunakan agar konten tidak tertutup
+      // oleh status bar perangkat.
       body: SafeArea(
         // Widget SingleChildScrollView digunakan agar halaman
-        // dapat di-scroll jika isi melebihi ukuran layar.
+        // dapat digulir ke bawah.
         child: SingleChildScrollView(
           // Widget Padding digunakan untuk memberikan jarak
-          // antara isi halaman dengan tepi layar.
+          // antara isi halaman dan tepi layar.
           child: Padding(
             padding: const EdgeInsets.all(20),
 
             // Widget Column digunakan untuk menyusun
-            // seluruh bagian homepage secara vertikal.
+            // isi homepage secara vertikal.
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
 
-                // Widget Header merupakan widget buatan sendiri
-                // yang berisi nama toko dan icon notifikasi/cart.
+                // Widget Header digunakan untuk menampilkan
+                // nama toko dan icon pada bagian atas.
                 const Header(),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // jarak antara Header dan Welcome Section.
+                // jarak setelah Header.
                 const SizedBox(height: 30),
 
                 // Widget Text digunakan untuk menampilkan
@@ -89,7 +99,7 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 // Widget Text digunakan untuk menampilkan
-                // deskripsi singkat aplikasi.
+                // deskripsi singkat.
                 const Text(
                   'Find your favorite trading cards here.',
                   style: TextStyle(
@@ -99,19 +109,18 @@ class HomePage extends StatelessWidget {
                 ),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // jarak sebelum SearchBar.
+                // jarak sebelum search bar.
                 const SizedBox(height: 20),
 
-                // Widget SearchBar merupakan widget buatan sendiri
-                // yang berisi kolom pencarian kartu.
+                // Widget SearchBar digunakan sebagai
+                // kolom pencarian kartu.
                 const SearchBarWidget(),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // jarak menuju bagian Categories.
+                // jarak menuju kategori.
                 const SizedBox(height: 30),
 
-                // Widget Text digunakan untuk menampilkan
-                // judul Categories.
+                // Widget Text digunakan sebagai judul kategori.
                 const Text(
                   'Categories',
                   style: TextStyle(
@@ -125,59 +134,59 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 15),
 
                 // Widget Row digunakan untuk menyusun
-                // tiga kategori secara horizontal.
+                // beberapa kategori secara horizontal.
                 Row(
                   children: [
 
                     // Widget Expanded digunakan agar
-                    // kategori pertama mendapatkan ruang yang sama.
+                    // kategori memiliki ukuran yang seimbang.
                     Expanded(
                       child: CategoryCard(
                         icon: Icons.catching_pokemon,
                         title: 'Pokémon',
                         iconColor: Colors.red,
-                        backgroundColor: Color(0xFFFFEBEE),
+                        backgroundColor: const Color(0xFFFFEBEE),
                       ),
                     ),
 
-                    // Widget SizedBox digunakan untuk memberikan
-                    // jarak antar kategori.
+                    // Widget SizedBox digunakan untuk
+                    // memberikan jarak antar kategori.
                     const SizedBox(width: 10),
 
-                    // Widget Expanded digunakan agar
-                    // kategori kedua mendapatkan ruang yang sama.
+                    // Widget Expanded digunakan untuk
+                    // kategori kedua.
                     Expanded(
                       child: CategoryCard(
                         icon: Icons.auto_awesome,
                         title: 'Yu-Gi-Oh!',
                         iconColor: Colors.blue,
-                        backgroundColor: Color(0xFFE3F2FD),
+                        backgroundColor: const Color(0xFFE3F2FD),
                       ),
                     ),
 
-                    // Widget SizedBox digunakan untuk memberikan
-                    // jarak antar kategori.
+                    // Widget SizedBox digunakan untuk
+                    // memberikan jarak antar kategori.
                     const SizedBox(width: 10),
 
-                    // Widget Expanded digunakan agar
-                    // kategori ketiga mendapatkan ruang yang sama.
+                    // Widget Expanded digunakan untuk
+                    // kategori ketiga.
                     Expanded(
                       child: CategoryCard(
                         icon: Icons.star,
                         title: 'One Piece',
                         iconColor: Colors.orange,
-                        backgroundColor: Color(0xFFFFF3E0),
+                        backgroundColor: const Color(0xFFFFF3E0),
                       ),
                     ),
                   ],
                 ),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // jarak menuju bagian Featured Cards.
+                // jarak menuju featured cards.
                 const SizedBox(height: 30),
 
                 // Widget Row digunakan untuk menyusun
-                // judul dan tulisan See All secara horizontal.
+                // judul Featured Cards dan See All.
                 Row(
                   children: [
 
@@ -207,49 +216,70 @@ class HomePage extends StatelessWidget {
                 ),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // jarak antara judul dan produk.
+                // jarak sebelum kartu produk.
                 const SizedBox(height: 15),
 
-                // Widget Row digunakan untuk menyusun
-                // dua ProductCard secara horizontal.
+                // Widget Row digunakan untuk menampilkan
+                // dua kartu produk secara horizontal.
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    // Widget Expanded digunakan agar ProductCard
-                    // pertama mendapatkan setengah ruang.
-                    const Expanded(
+                    // Widget Expanded digunakan untuk
+                    // memberikan ruang kepada ProductCard.
+                    Expanded(
                       child: ProductCard(
                         cardName: 'Charizard',
                         price: 'Rp 250.000',
-                        cardColor: Color(0xFFFFCDD2),
+                        cardColor: const Color(0xFFFFCDD2),
                         iconColor: Colors.red,
+
+                        // Ketika kartu ditekan, Navigator.push
+                        // digunakan untuk membuka halaman Cart.
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CartPage(),
+                            ),
+                          );
+                        },
                       ),
                     ),
 
-                    // Widget SizedBox digunakan untuk memberikan
-                    // jarak antara dua ProductCard.
-                    SizedBox(width: 12),
+                    // Widget SizedBox digunakan untuk
+                    // memberikan jarak antar produk.
+                    const SizedBox(width: 12),
 
-                    // Widget Expanded digunakan agar ProductCard
-                    // kedua mendapatkan setengah ruang.
-                    const Expanded(
+                    // Widget Expanded digunakan untuk
+                    // produk kedua.
+                    Expanded(
                       child: ProductCard(
                         cardName: 'Blue-Eyes',
                         price: 'Rp 180.000',
-                        cardColor: Color(0xFFBBDEFB),
+                        cardColor: const Color(0xFFBBDEFB),
                         iconColor: Colors.blue,
+
+                        // Navigator.push digunakan untuk
+                        // membuka halaman Cart dari produk kedua.
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CartPage(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // jarak menuju bagian Popular Collection.
+                // jarak menuju collection banner.
                 const SizedBox(height: 30),
 
-                // Widget Text digunakan untuk menampilkan
-                // judul Popular Collection.
+                // Widget Text digunakan sebagai judul koleksi.
                 const Text(
                   'Popular Collection',
                   style: TextStyle(
@@ -259,20 +289,63 @@ class HomePage extends StatelessWidget {
                 ),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // jarak antara judul dan banner.
+                // jarak sebelum banner.
                 const SizedBox(height: 15),
 
-                // Widget CollectionBanner merupakan widget buatan
-                // sendiri untuk menampilkan banner koleksi kartu.
+                // Widget CollectionBanner digunakan untuk
+                // menampilkan informasi koleksi.
                 const CollectionBanner(),
 
                 // Widget SizedBox digunakan untuk memberikan
-                // ruang kosong di bagian bawah homepage.
+                // ruang kosong di bagian bawah.
                 const SizedBox(height: 30),
               ],
             ),
           ),
         ),
+      ),
+
+      // Widget BottomNavigationBar digunakan sebagai
+      // navigasi utama antara Home dan Cart.
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedIndex,
+
+        // Callback dijalankan ketika menu navigation ditekan.
+        onTap: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+
+          // Jika menu Cart dipilih, Navigator.push
+          // digunakan untuk membuka halaman Cart.
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CartPage(),
+              ),
+            );
+          }
+        },
+
+        items: const [
+
+          // BottomNavigationBarItem digunakan untuk
+          // membuat menu Home.
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+
+          // BottomNavigationBarItem digunakan untuk
+          // membuat menu Cart.
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            activeIcon: Icon(Icons.shopping_cart),
+            label: 'Cart',
+          ),
+        ],
       ),
     );
   }
