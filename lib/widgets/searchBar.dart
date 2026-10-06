@@ -1,53 +1,36 @@
 import 'package:flutter/material.dart';
 
-// Widget SearchBarWidget digunakan untuk membuat
-// kolom pencarian kartu TCG.
+// Widget SearchBar digunakan untuk menerima input pencarian.
 class SearchBarWidget extends StatelessWidget {
-  const SearchBarWidget({super.key});
+  // Callback akan dijalankan ketika teks berubah.
+  final ValueChanged<String> onChanged;
+
+  const SearchBarWidget({
+    super.key,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Widget Container digunakan sebagai wadah
-    // untuk membuat tampilan search bar.
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-      ),
+    // Padding memberikan jarak di sekitar TextField.
+    return Padding(
+      padding: const EdgeInsets.all(16),
 
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(15),
-      ),
+      // TextField digunakan untuk memasukkan kata pencarian.
+      child: TextField(
+        // onChanged mengirimkan teks ke HomePage.
+        onChanged: onChanged,
 
-      // Widget Row digunakan untuk menyusun
-      // icon search dan TextField secara horizontal.
-      child: Row(
-        children: [
+        // Decoration mengatur tampilan TextField.
+        decoration: InputDecoration(
+          hintText: 'Cari kartu TCG...',
+          prefixIcon: const Icon(Icons.search),
 
-          // Widget Icon digunakan untuk menampilkan
-          // icon pencarian.
-          const Icon(
-            Icons.search,
-            color: Colors.grey,
+          // Border digunakan untuk membuat garis input.
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
-
-          // Widget SizedBox digunakan untuk memberikan
-          // jarak antara icon dan TextField.
-          const SizedBox(width: 10),
-
-          // Widget Expanded digunakan agar TextField
-          // memenuhi ruang yang tersisa.
-          const Expanded(
-            // Widget TextField digunakan sebagai
-            // input untuk mencari kartu.
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search your cards...',
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

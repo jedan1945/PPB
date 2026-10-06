@@ -1,250 +1,254 @@
 import 'package:flutter/material.dart';
+import '../models/product.dart';
 
-// Widget CartPage digunakan sebagai halaman
-// keranjang belanja TCG Card Shop.
-class CartPage extends StatelessWidget {
-  const CartPage({super.key});
+// CartPage digunakan untuk menampilkan produk yang ada di keranjang.
+class CartPage extends StatefulWidget {
+  final List<Product> cart;
+  final Function(Product) onRemove;
+  final Function(Product, int) onQuantityChanged;
+
+  const CartPage({
+    super.key,
+    required this.cart,
+    required this.onRemove,
+    required this.onQuantityChanged,
+  });
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+// State CartPage digunakan karena jumlah produk dapat berubah.
+class _CartPageState extends State<CartPage> {
+  // Controller digunakan untuk mengatur input jumlah produk.
+  final Map<Product, TextEditingController> controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Membuat controller untuk setiap produk.
+    for (final product in widget.cart.toSet()) {
+      controllers[product] = TextEditingController(
+        text: getQuantity(product).toString(),
+      );
+    }
+  }
+
+  // Menghitung jumlah produk tertentu di dalam cart.
+  int getQuantity(Product product) {
+    return widget.cart.where((item) => item == product).length;
+  }
+
+  // Menghitung total harga seluruh produk.
+  int get grandTotal {
+    int total = 0;
+
+    for (final product in widget.cart) {
+      total += product.price;
+    }
+
+    return total;
+  }
+
+  // Mengubah quantity produk.
+  void updateQuantity(Product product, String value) {
+    // Mengubah teks menjadi angka.
+    final parsed = int.tryParse(value);
+
+    // Input tidak valid tidak diproses.
+    if (parsed == null || parsed < 1) {
+      return;
+    }
+
+    // Mengirim perubahan quantity ke HomePage.
+    widget.onQuantityChanged(product, parsed);
+
+    // Memperbarui tampilan CartPage.
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Widget Scaffold digunakan sebagai struktur
-    // dasar halaman Cart.
+    // Scaffold digunakan sebagai struktur utama halaman Cart.
     return Scaffold(
-      // Widget AppBar digunakan sebagai bagian atas
-      // halaman Cart.
+      // AppBar digunakan sebagai header Cart.
       appBar: AppBar(
-        // Widget Text digunakan untuk menampilkan
-        // judul halaman.
-        title: const Text(
-          'My Cart',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        // Tombol kembali akan menggunakan Navigator.pop.
-        leading: IconButton(
-          // Widget IconButton digunakan sebagai tombol
-          // untuk kembali ke halaman sebelumnya.
-          icon: const Icon(Icons.arrow_back),
-
-          // Navigator.pop digunakan untuk menghapus
-          // halaman Cart dari navigation stack.
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        title: const Text('Keranjang'),
       ),
 
-      // Widget SafeArea digunakan agar isi halaman
-      // tidak tertutup oleh area sistem perangkat.
-      body: SafeArea(
-        // Widget Padding digunakan untuk memberikan
-        // jarak dari tepi layar.
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+      // Body menampilkan isi keranjang.
+      body: widget.cart.isEmpty
+          ? const Center(
+        // Text menampilkan pesan ketika cart kosong.
+        child: Text(
+          'Keranjang masih kosong',
+          style: TextStyle(fontSize: 18),
+        ),
+      )
+          : Column(
+        children: [
+          // Expanded digunakan agar ListView mengambil ruang yang tersedia.
+          Expanded(
+            // ListView menampilkan daftar produk.
+            child: ListView.builder(
+              itemCount: widget.cart.toSet().length,
+              itemBuilder: (context, index) {
+                final product =
+                widget.cart.toSet().elementAt(index);
 
-          // Widget Column digunakan untuk menyusun
-          // isi halaman Cart secara vertikal.
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+                final quantity = getQuantity(product);
 
-              // Widget Text digunakan untuk menampilkan
-              // judul bagian keranjang.
-              const Text(
-                'Your Collection',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                // Membuat controller jika belum tersedia.
+                controllers.putIfAbsent(
+                  product,
+                      () => TextEditingController(
+                    text: quantity.toString(),
+                  ),
+                );
 
-              // Widget SizedBox digunakan untuk memberikan
-              // jarak setelah judul.
-              const SizedBox(height: 20),
+                // Card digunakan untuk membungkus informasi produk.
+                return Card(
+                  margin: const EdgeInsets.all(10),
 
-              // Widget Container digunakan sebagai
-              // kartu produk di dalam keranjang.
-              Container(
-                padding: const EdgeInsets.all(15),
+                  // Padding memberikan jarak isi.
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
 
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-
-                  // BoxShadow digunakan untuk memberikan
-                  // efek bayangan pada produk.
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-
-                // Widget Row digunakan untuk menyusun
-                // informasi produk secara horizontal.
-                child: Row(
-                  children: [
-
-                    // Widget Container digunakan sebagai
-                    // area visual kartu.
-                    Container(
-                      width: 80,
-                      height: 100,
-
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade100,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-
-                      // Widget Icon digunakan sebagai
-                      // visual kartu TCG.
-                      child: const Icon(
-                        Icons.style,
-                        size: 45,
-                        color: Colors.red,
-                      ),
-                    ),
-
-                    // Widget SizedBox digunakan untuk
-                    // memberikan jarak antara gambar dan teks.
-                    const SizedBox(width: 15),
-
-                    // Widget Expanded digunakan agar informasi
-                    // produk mengambil ruang yang tersedia.
-                    const Expanded(
-                      // Widget Column digunakan untuk menyusun
-                      // nama, harga, dan jumlah produk.
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          // Widget Text digunakan untuk
-                          // menampilkan nama kartu.
-                          Text(
-                            'Charizard',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-
-                          // Widget SizedBox digunakan untuk
-                          // memberikan jarak antar teks.
-                          SizedBox(height: 6),
-
-                          // Widget Text digunakan untuk
-                          // menampilkan harga.
-                          Text(
-                            'Rp 250.000',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-
-                          // Widget SizedBox digunakan untuk
-                          // memberikan jarak sebelum jumlah.
-                          SizedBox(height: 6),
-
-                          // Widget Text digunakan untuk
-                          // menampilkan jumlah kartu.
-                          Text(
-                            'Quantity: 1',
-                            style: TextStyle(
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Widget Spacer digunakan untuk mendorong
-              // total harga ke bagian bawah halaman.
-              const Spacer(),
-
-              // Widget Container digunakan sebagai
-              // area total pembayaran.
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-
-                // Widget Row digunakan untuk menyusun
-                // tulisan Total dan harga.
-                child: Row(
-                  children: [
-
-                    // Widget Expanded digunakan agar
-                    // tulisan Total berada di kiri.
-                    const Expanded(
-                      child: Text(
-                        'Total',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    // Row menyusun gambar dan informasi secara horizontal.
+                    child: Row(
+                      children: [
+                        // Image.network menampilkan gambar kartu.
+                        Image.network(
+                          product.image,
+                          width: 70,
+                          height: 90,
+                          fit: BoxFit.cover,
                         ),
-                      ),
-                    ),
 
-                    // Widget Text digunakan untuk
-                    // menampilkan total harga.
-                    const Text(
-                      'Rp 250.000',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                        const SizedBox(width: 12),
 
-              // Widget SizedBox digunakan untuk memberikan
-              // jarak antara total dan tombol.
-              const SizedBox(height: 15),
+                        // Expanded membuat informasi menggunakan ruang tersisa.
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                            children: [
+                              // Text menampilkan nama kartu.
+                              Text(
+                                product.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
 
-              // Widget SizedBox digunakan untuk menentukan
-              // tinggi tombol Checkout.
-              SizedBox(
-                width: double.infinity,
-                height: 50,
+                              // Text menampilkan harga.
+                              Text(
+                                'Rp ${product.price}',
+                              ),
 
-                // Widget ElevatedButton digunakan sebagai
-                // tombol checkout.
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Tombol checkout belum memiliki
-                    // proses pembayaran.
-                  },
+                              const SizedBox(height: 8),
 
-                  // Widget Text digunakan sebagai
-                  // tulisan pada tombol.
-                  child: const Text(
-                    'Checkout',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                              // TextField digunakan untuk mengubah jumlah.
+                              TextField(
+                                controller: controllers[product],
+
+                                // keyboardType digunakan agar keyboard angka.
+                                keyboardType:
+                                TextInputType.number,
+
+                                // onChanged menangani perubahan quantity.
+                                onChanged: (value) {
+                                  updateQuantity(
+                                    product,
+                                    value,
+                                  );
+                                },
+
+                                // Decoration mengatur tampilan input.
+                                decoration:
+                                const InputDecoration(
+                                  labelText: 'Jumlah',
+                                  border:
+                                  OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // IconButton digunakan untuk menghapus produk.
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete,
+                          ),
+
+                          // onPressed menjalankan fungsi hapus.
+                          onPressed: () {
+                            widget.onRemove(product);
+
+                            // Memperbarui tampilan.
+                            setState(() {});
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        ),
+
+          // Container digunakan sebagai bagian total pembayaran.
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Text menampilkan total harga.
+                Text(
+                  'Grand Total: Rp $grandTotal',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // ElevatedButton untuk checkout.
+                ElevatedButton(
+                  // Tombol aktif jika grandTotal lebih dari 0.
+                  onPressed: grandTotal > 0
+                      ? () {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Checkout berhasil!',
+                        ),
+                      ),
+                    );
+                  }
+                      : null,
+
+                  // Text menampilkan label checkout.
+                  child: const Text('Checkout'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // Membersihkan semua controller ketika halaman dihancurkan.
+    for (final controller in controllers.values) {
+      controller.dispose();
+    }
+
+    super.dispose();
   }
 }

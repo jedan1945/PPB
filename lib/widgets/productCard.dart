@@ -1,192 +1,136 @@
 import 'package:flutter/material.dart';
+import '../models/product.dart';
 
-// Widget ProductCard digunakan untuk menampilkan
-// produk kartu TCG pada halaman Home.
+// ProductCard digunakan untuk menampilkan satu kartu TCG.
 class ProductCard extends StatelessWidget {
-  final String cardName;
-  final String price;
-  final Color cardColor;
-  final Color iconColor;
-
-  // Callback digunakan untuk menjalankan aksi
-  // ketika ProductCard ditekan.
-  final VoidCallback onTap;
+  final Product product;
+  final VoidCallback onAddToCart;
 
   const ProductCard({
     super.key,
-    required this.cardName,
-    required this.price,
-    required this.cardColor,
-    required this.iconColor,
-    required this.onTap,
+    required this.product,
+    required this.onAddToCart,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // GestureDetector digunakan untuk mendeteksi
-      // sentuhan pengguna pada ProductCard.
-      onTap: onTap,
+    // Container digunakan sebagai kartu produk.
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
 
-      // Widget Container digunakan sebagai wadah
-      // seluruh produk kartu.
-      child: Container(
-        padding: const EdgeInsets.all(15),
+        // BoxShadow digunakan untuk memberikan efek bayangan.
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
 
-        decoration: BoxDecoration(
-          color: Colors.white,
+      // Stack digunakan untuk menumpuk gambar dan informasi produk.
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              // Expanded membuat gambar memenuhi area yang tersedia.
+              Expanded(
+                // ClipRRect membuat sudut gambar mengikuti card.
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
 
-          // BoxShadow digunakan untuk memberikan
-          // efek bayangan pada ProductCard.
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade300,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-
-          borderRadius: BorderRadius.circular(18),
-        ),
-
-        // Widget Column digunakan untuk menyusun
-        // gambar, nama, harga, dan jumlah produk.
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            // Widget Stack digunakan untuk menumpuk
-            // gambar kartu dan label "RARE".
-            SizedBox(
-              height: 150,
-
-              // Widget Stack digunakan untuk menumpuk
-              // beberapa widget pada area yang sama.
-              child: Stack(
-                children: [
-
-                  // Widget Container digunakan sebagai
-                  // background area kartu.
-                  Container(
+                  // Image.network digunakan untuk menampilkan gambar kartu.
+                  child: Image.network(
+                    product.image,
                     width: double.infinity,
-                    height: 150,
-
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-
-                    // Widget Image digunakan untuk menampilkan
-                    // gambar kartu dari internet.
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        cardName == 'Charizard'
-                            ? 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?w=500'
-                            : 'https://images.unsplash.com/photo-1606503153255-59d8b8b8f3f7?w=500',
-                        fit: BoxFit.cover,
-
-                        // Jika gambar gagal dimuat,
-                        // Icon akan ditampilkan sebagai pengganti.
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Icon(
-                              Icons.style,
-                              size: 70,
-                              color: iconColor,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                    fit: BoxFit.cover,
                   ),
-
-                  // Widget Positioned digunakan untuk menempatkan
-                  // label RARE pada bagian atas kartu.
-                  Positioned(
-                    top: 8,
-                    right: 8,
-
-                    // Widget Container digunakan sebagai
-                    // background label RARE.
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
-                      ),
-
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-
-                      // Widget Text digunakan untuk
-                      // menampilkan label RARE.
-                      child: const Text(
-                        'RARE',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Widget SizedBox digunakan untuk memberikan
-            // jarak antara gambar dan nama kartu.
-            const SizedBox(height: 12),
-
-            // Widget Text digunakan untuk menampilkan
-            // nama kartu.
-            Text(
-              cardName,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            // Widget SizedBox digunakan untuk memberikan
-            // jarak antara nama dan harga.
-            const SizedBox(height: 5),
-
-            // Widget Text digunakan untuk menampilkan
-            // harga kartu.
-            Text(
-              price,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: iconColor,
-              ),
-            ),
-
-            // Widget SizedBox digunakan untuk memberikan
-            // jarak sebelum input jumlah.
-            const SizedBox(height: 10),
-
-            // Widget TextField digunakan untuk menerima
-            // input jumlah kartu.
-            TextField(
-              keyboardType: TextInputType.number,
-
-              decoration: InputDecoration(
-                hintText: 'Jumlah',
-                prefixIcon: const Icon(Icons.numbers),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 8,
+              ),
+
+              // Padding digunakan untuk memberi jarak informasi produk.
+              Padding(
+                padding: const EdgeInsets.all(10),
+
+                // Column menampilkan informasi produk secara vertikal.
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Text menampilkan nama produk.
+                    Text(
+                      product.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    // Text menampilkan kategori produk.
+                    Text(product.category),
+
+                    const SizedBox(height: 5),
+
+                    // Text menampilkan harga produk.
+                    Text(
+                      'Rp ${product.price}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    // Text menampilkan jumlah stok.
+                    Text('Stok: ${product.stock}'),
+
+                    const SizedBox(height: 5),
+
+                    // ElevatedButton digunakan untuk memasukkan produk.
+                    ElevatedButton(
+                      // State stock menentukan tombol aktif atau tidak.
+                      onPressed:
+                      product.stock > 0 ? onAddToCart : null,
+
+                      // Text menampilkan tulisan tombol.
+                      child: const Text('Tambah'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Positioned digunakan untuk menempatkan label kategori.
+          Positioned(
+            top: 8,
+            right: 8,
+
+            // Container digunakan sebagai label.
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
+
+              // BoxDecoration mengatur tampilan label.
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(8),
+              ),
+
+              // Text menampilkan kategori.
+              child: Text(
+                product.category,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
