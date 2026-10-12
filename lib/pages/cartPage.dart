@@ -1,254 +1,199 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../models/product.dart';
+import '../providers/cart_provider.dart';
 
-// CartPage digunakan untuk menampilkan produk yang ada di keranjang.
-class CartPage extends StatefulWidget {
-  final List<Product> cart;
-  final Function(Product) onRemove;
-  final Function(Product, int) onQuantityChanged;
-
-  const CartPage({
-    super.key,
-    required this.cart,
-    required this.onRemove,
-    required this.onQuantityChanged,
-  });
-
-  @override
-  State<CartPage> createState() => _CartPageState();
-}
-
-// State CartPage digunakan karena jumlah produk dapat berubah.
-class _CartPageState extends State<CartPage> {
-  // Controller digunakan untuk mengatur input jumlah produk.
-  final Map<Product, TextEditingController> controllers = {};
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Membuat controller untuk setiap produk.
-    for (final product in widget.cart.toSet()) {
-      controllers[product] = TextEditingController(
-        text: getQuantity(product).toString(),
-      );
-    }
-  }
-
-  // Menghitung jumlah produk tertentu di dalam cart.
-  int getQuantity(Product product) {
-    return widget.cart.where((item) => item == product).length;
-  }
-
-  // Menghitung total harga seluruh produk.
-  int get grandTotal {
-    int total = 0;
-
-    for (final product in widget.cart) {
-      total += product.price;
-    }
-
-    return total;
-  }
-
-  // Mengubah quantity produk.
-  void updateQuantity(Product product, String value) {
-    // Mengubah teks menjadi angka.
-    final parsed = int.tryParse(value);
-
-    // Input tidak valid tidak diproses.
-    if (parsed == null || parsed < 1) {
-      return;
-    }
-
-    // Mengirim perubahan quantity ke HomePage.
-    widget.onQuantityChanged(product, parsed);
-
-    // Memperbarui tampilan CartPage.
-    setState(() {});
-  }
+// CartPage menampilkan dan mengubah isi keranjang melalui Provider.
+class CartPage extends StatelessWidget {
+  const CartPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold digunakan sebagai struktur utama halaman Cart.
+    // Scaffold menyediakan struktur utama halaman Cart.
     return Scaffold(
-      // AppBar digunakan sebagai header Cart.
-      appBar: AppBar(
-        title: const Text('Keranjang'),
-      ),
+      // AppBar menampilkan judul dan tombol kembali bawaan.
+      appBar: AppBar(title: const Text('Keranjang')),
 
-      // Body menampilkan isi keranjang.
-      body: widget.cart.isEmpty
-          ? const Center(
-        // Text menampilkan pesan ketika cart kosong.
-        child: Text(
-          'Keranjang masih kosong',
-          style: TextStyle(fontSize: 18),
-        ),
-      )
-          : Column(
-        children: [
-          // Expanded digunakan agar ListView mengambil ruang yang tersedia.
-          Expanded(
-            // ListView menampilkan daftar produk.
-            child: ListView.builder(
-              itemCount: widget.cart.toSet().length,
-              itemBuilder: (context, index) {
-                final product =
-                widget.cart.toSet().elementAt(index);
+      // Consumer mendengarkan perubahan jumlah, stok, dan total harga.
+      body: Consumer<CartProvider>(
+        builder: (context, cartProvider, child) {
+          final entries = cartProvider.cartQuantities.entries.toList();
 
-                final quantity = getQuantity(product);
+          // Center menampilkan pesan jika keranjang kosong.
+          if (entries.isEmpty) {
+            return const Center(
+              child: Text(
+                'Keranjang masih kosong',
+                style: TextStyle(fontSize: 18),
+              ),
+            );
+          }
 
-                // Membuat controller jika belum tersedia.
-                controllers.putIfAbsent(
-                  product,
-                      () => TextEditingController(
-                    text: quantity.toString(),
-                  ),
-                );
+          // Column menyusun daftar barang dan total pembayaran.
+          return Column(
+            children: [
+              // Expanded memberikan ruang yang tersisa kepada ListView.
+              Expanded(
+                // ListView menampilkan tiap jenis produk di keranjang.
+                child: ListView.builder(
+                  itemCount: entries.length,
+                  itemBuilder: (context, index) {
+                    final entry = entries[index];
+                    final Product product = entry.key;
+                    final int quantity = entry.value;
 
-                // Card digunakan untuk membungkus informasi produk.
-                return Card(
-                  margin: const EdgeInsets.all(10),
-
-                  // Padding memberikan jarak isi.
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-
-                    // Row menyusun gambar dan informasi secara horizontal.
-                    child: Row(
-                      children: [
-                        // Image.network menampilkan gambar kartu.
-                        Image.network(
-                          product.image,
-                          width: 70,
-                          height: 90,
-                          fit: BoxFit.cover,
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        // Expanded membuat informasi menggunakan ruang tersisa.
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                            children: [
-                              // Text menampilkan nama kartu.
-                              Text(
-                                product.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-
-                              // Text menampilkan harga.
-                              Text(
-                                'Rp ${product.price}',
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              // TextField digunakan untuk mengubah jumlah.
-                              TextField(
-                                controller: controllers[product],
-
-                                // keyboardType digunakan agar keyboard angka.
-                                keyboardType:
-                                TextInputType.number,
-
-                                // onChanged menangani perubahan quantity.
-                                onChanged: (value) {
-                                  updateQuantity(
-                                    product,
-                                    value,
+                    // Card membungkus informasi satu produk.
+                    return Card(
+                      margin: const EdgeInsets.all(10),
+                      // Padding memberi ruang di dalam kartu produk.
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        // Row menyusun gambar, detail, dan tombol hapus.
+                        child: Row(
+                          children: [
+                            // Image.network menampilkan gambar produk.
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                product.image,
+                                width: 70,
+                                height: 90,
+                                fit: BoxFit.cover,
+                                // Icon menjadi pengganti jika gambar gagal dimuat.
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: 70,
+                                    height: 90,
+                                    color: Colors.black12,
+                                    child: const Icon(Icons.image_not_supported),
                                   );
                                 },
-
-                                // Decoration mengatur tampilan input.
-                                decoration:
-                                const InputDecoration(
-                                  labelText: 'Jumlah',
-                                  border:
-                                  OutlineInputBorder(),
-                                ),
                               ),
-                            ],
-                          ),
-                        ),
-
-                        // IconButton digunakan untuk menghapus produk.
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                          ),
-
-                          // onPressed menjalankan fungsi hapus.
-                          onPressed: () {
-                            widget.onRemove(product);
-
-                            // Memperbarui tampilan.
-                            setState(() {});
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Container digunakan sebagai bagian total pembayaran.
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Text menampilkan total harga.
-                Text(
-                  'Grand Total: Rp $grandTotal',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // ElevatedButton untuk checkout.
-                ElevatedButton(
-                  // Tombol aktif jika grandTotal lebih dari 0.
-                  onPressed: grandTotal > 0
-                      ? () {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Checkout berhasil!',
+                            ),
+                            // SizedBox memberi jarak antara gambar dan detail.
+                            const SizedBox(width: 12),
+                            // Expanded memberi ruang kepada detail produk.
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Text menampilkan nama produk.
+                                  Text(
+                                    product.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  // Text menampilkan harga satu kartu.
+                                  Text('Rp ${product.price}'),
+                                  // Text menampilkan subtotal produk.
+                                  Text('Subtotal: Rp ${product.price * quantity}'),
+                                  // Row menyusun kontrol jumlah secara horizontal.
+                                  Row(
+                                    children: [
+                                      // IconButton mengurangi jumlah barang.
+                                      IconButton(
+                                        tooltip: 'Kurangi jumlah',
+                                        onPressed: () {
+                                          // read memanggil Provider tanpa subscribe.
+                                          context
+                                              .read<CartProvider>()
+                                              .updateQuantity(
+                                                product,
+                                                quantity - 1,
+                                              );
+                                        },
+                                        icon: const Icon(Icons.remove_circle_outline),
+                                      ),
+                                      // Text menampilkan jumlah saat ini.
+                                      Text(
+                                        '$quantity',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      // IconButton menambah jumlah jika stok tersedia.
+                                      IconButton(
+                                        tooltip: 'Tambah jumlah',
+                                        onPressed: product.stock > 0
+                                            ? () {
+                                                context
+                                                    .read<CartProvider>()
+                                                    .updateQuantity(
+                                                      product,
+                                                      quantity + 1,
+                                                    );
+                                              }
+                                            : null,
+                                        icon: const Icon(Icons.add_circle_outline),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // IconButton menghapus seluruh produk dari keranjang.
+                            IconButton(
+                              tooltip: 'Hapus produk',
+                              onPressed: () {
+                                context
+                                    .read<CartProvider>()
+                                    .removeFromCart(product);
+                              },
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                            ),
+                          ],
                         ),
                       ),
                     );
-                  }
-                      : null,
-
-                  // Text menampilkan label checkout.
-                  child: const Text('Checkout'),
+                  },
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+
+              // Container menjadi area ringkasan pembayaran.
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                color: Colors.white,
+                // Column menyusun total dan tombol checkout.
+                child: Column(
+                  children: [
+                    // Text menampilkan total jumlah barang.
+                    Text('Jumlah barang: ${cartProvider.totalItems}'),
+                    // Text menampilkan total harga semua barang.
+                    Text(
+                      'Grand Total: Rp ${cartProvider.grandTotal}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    // SizedBox memberi jarak sebelum tombol checkout.
+                    const SizedBox(height: 10),
+                    // ElevatedButton menjalankan simulasi checkout.
+                    ElevatedButton(
+                      // Tombol aktif jika keranjang tidak kosong.
+                      onPressed: cartProvider.totalItems > 0
+                          ? () {
+                              // SnackBar menampilkan pesan setelah checkout.
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Checkout berhasil!'),
+                                ),
+                              );
+                            }
+                          : null,
+                      // Text menjadi label tombol.
+                      child: const Text('Checkout'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // Membersihkan semua controller ketika halaman dihancurkan.
-    for (final controller in controllers.values) {
-      controller.dispose();
-    }
-
-    super.dispose();
   }
 }

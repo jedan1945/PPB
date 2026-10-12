@@ -1,41 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'models/product.dart';
 import 'pages/cartPage.dart';
-import 'widgets/header.dart';
-import 'widgets/searchBar.dart';
+import 'providers/cart_provider.dart';
 import 'widgets/categoryCard.dart';
-import 'widgets/productCard.dart';
 import 'widgets/collectionBanner.dart';
+import 'widgets/header.dart';
+import 'widgets/productCard.dart';
+import 'widgets/searchBar.dart';
 
 void main() {
-  runApp(const TCGCardShopApp());
+  // MultiProvider menyediakan state untuk seluruh widget turunan aplikasi.
+  runApp(
+    MultiProvider(
+      providers: [
+        // ChangeNotifierProvider membuat CartProvider tersedia di semua halaman.
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+      ],
+      child: const TCGCardShopApp(),
+    ),
+  );
 }
 
-// Widget utama aplikasi TCG Card Shop.
+// TCGCardShopApp merupakan root widget aplikasi.
 class TCGCardShopApp extends StatelessWidget {
   const TCGCardShopApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // MaterialApp digunakan sebagai root aplikasi Flutter.
+    // MaterialApp mengatur navigasi, tema, dan halaman awal.
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'TCG Card Shop',
-
-      // ThemeData digunakan untuk mengatur tema aplikasi.
       theme: ThemeData(
         primarySwatch: Colors.indigo,
         scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+        useMaterial3: true,
       ),
-
-      // HomePage menjadi halaman pertama aplikasi.
       home: const HomePage(),
     );
   }
 }
 
-// StatefulWidget digunakan karena data produk dan keranjang dapat berubah.
+// HomePage tetap StatefulWidget karena pencarian dan tab merupakan state lokal.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -43,185 +50,98 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-// State utama HomePage.
 class _HomePageState extends State<HomePage> {
-  // Menyimpan kata pencarian dari TextField.
+  // searchQuery menyimpan kata pencarian yang diketik pengguna.
   String searchQuery = '';
 
-  // Menyimpan index navigation bar.
-  int selectedIndex = 0;
-
-  // Daftar produk TCG.
-  final List<Product> products = [
-    Product(
-      name: 'Charizard EX',
-      category: 'Pokemon',
-      price: 250000,
-      stock: 5,
-      image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1',
-    ),
-    Product(
-      name: 'Blue-Eyes White Dragon',
-      category: 'Yu-Gi-Oh',
-      price: 300000,
-      stock: 4,
-      image: 'https://images.unsplash.com/photo-1613771404721-1f92d799e49f',
-    ),
-    Product(
-      name: 'Luffy Gear 5',
-      category: 'One Piece',
-      price: 275000,
-      stock: 6,
-      image: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64',
-    ),
-  ];
-
-  // Menyimpan produk yang sudah dimasukkan ke keranjang.
-  final List<Product> cart = [];
-
-  // Fungsi untuk menambahkan produk ke keranjang.
-  void addToCart(Product product) {
-    setState(() {
-      // Mengurangi stok produk.
-      product.stock--;
-
-      // Menambahkan produk ke keranjang.
-      cart.add(product);
-    });
-
-    // Menampilkan notifikasi bahwa produk berhasil ditambahkan.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} masuk ke keranjang!'),
-      ),
-    );
-  }
-
-  // Fungsi untuk mencari produk berdasarkan input pengguna.
-  List<Product> get visibleProducts {
-    return products.where((product) {
-      return product.name.toLowerCase().contains(searchQuery);
-    }).toList();
-  }
-
-  // Fungsi untuk membuka halaman Cart.
-  void openCart() {
-    Navigator.push(
+  // Membuka CartPage; isi keranjang dibaca langsung dari Provider.
+  Future<void> openCart() async {
+    await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => CartPage(
-          cart: cart,
-          onRemove: removeFromCart,
-          onQuantityChanged: changeQuantity,
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => const CartPage()),
     );
-  }
-
-  // Fungsi menghapus produk dari keranjang.
-  void removeFromCart(Product product) {
-    setState(() {
-      cart.remove(product);
-      product.stock++;
-    });
-  }
-
-  // Fungsi mengubah jumlah produk dalam keranjang.
-  void changeQuantity(Product product, int newQuantity) {
-    setState(() {
-      // Menghitung jumlah produk lama.
-      int currentQuantity =
-          cart.where((item) => item == product).length;
-
-      // Menambah jumlah produk.
-      if (newQuantity > currentQuantity) {
-        int difference = newQuantity - currentQuantity;
-
-        for (int i = 0; i < difference; i++) {
-          if (product.stock > 0) {
-            product.stock--;
-            cart.add(product);
-          }
-        }
-      }
-
-      // Mengurangi jumlah produk.
-      if (newQuantity < currentQuantity) {
-        int difference = currentQuantity - newQuantity;
-
-        for (int i = 0; i < difference; i++) {
-          cart.remove(product);
-          product.stock++;
-        }
-      }
-    });
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold menjadi struktur utama halaman Home.
+    // Scaffold menyediakan struktur utama halaman Home.
     return Scaffold(
-      // AppBar digunakan sebagai bagian atas halaman.
+      // AppBar menampilkan judul aplikasi dan jumlah barang dalam keranjang.
       appBar: AppBar(
         title: const Text('TCG Card Shop'),
         centerTitle: true,
+        actions: [
+          // Consumer memperbarui angka keranjang saat state Provider berubah.
+          Consumer<CartProvider>(
+            builder: (context, cartProvider, child) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(
+                  child: Text(
+                    'Cart: ${cartProvider.totalItems}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
 
-      // Body menampilkan isi utama aplikasi.
-      body: selectedIndex == 0
-          ? SingleChildScrollView(
+      // SingleChildScrollView membuat isi Home dapat digulir.
+      body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header aplikasi.
-            const Header(),
+            // Header menampilkan identitas dan slogan toko.
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Header(),
+            ),
 
-            // SearchBar digunakan untuk mencari kartu.
+            // SearchBarWidget menerima input pencarian produk.
             SearchBarWidget(
               onChanged: (value) {
-                // setState memperbarui tampilan ketika user mengetik.
+                // setState memperbarui state lokal pencarian.
                 setState(() {
-                  searchQuery = value.toLowerCase();
+                  searchQuery = value.toLowerCase().trim();
                 });
               },
             ),
 
-            // Judul kategori.
+            // Padding dan Align menempatkan judul kategori di sisi kiri.
             const Padding(
               padding: EdgeInsets.all(16),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Kategori Kartu',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
 
-            // Category cards.
-            // Row digunakan untuk menampilkan kategori secara horizontal.
-            Row(
+            // Row menyusun tiga kategori secara horizontal.
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: const [
-                // CategoryCard untuk kategori Pokemon.
+              children: [
+                // CategoryCard menampilkan kategori Pokémon.
                 CategoryCard(
                   title: 'Pokemon',
                   icon: Icons.catching_pokemon,
                   iconColor: Colors.red,
                   backgroundColor: Color(0xFFFFE5E5),
                 ),
-
-                // CategoryCard untuk kategori Yu-Gi-Oh.
+                // CategoryCard menampilkan kategori Yu-Gi-Oh.
                 CategoryCard(
                   title: 'Yu-Gi-Oh',
                   icon: Icons.style,
                   iconColor: Colors.blue,
                   backgroundColor: Color(0xFFE5F0FF),
                 ),
-
-                // CategoryCard untuk kategori One Piece.
+                // CategoryCard menampilkan kategori One Piece.
                 CategoryCard(
                   title: 'One Piece',
                   icon: Icons.auto_awesome,
@@ -231,96 +151,87 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
 
+            // SizedBox memberi jarak antara kategori dan banner.
             const SizedBox(height: 20),
 
-            // Banner koleksi.
-            const CollectionBanner(),
+            // CollectionBanner menampilkan promosi koleksi kartu.
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: CollectionBanner(),
+            ),
 
+            // SizedBox memberi jarak sebelum daftar produk.
             const SizedBox(height: 20),
 
-            // Judul produk.
+            // Padding dan Align menampilkan judul daftar produk.
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Kartu Pilihan',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
 
-            const SizedBox(height: 10),
+            // Consumer mendengarkan perubahan daftar produk/stok dari Provider.
+            Consumer<CartProvider>(
+              builder: (context, cartProvider, child) {
+                final visibleProducts = cartProvider.products.where((product) {
+                  return product.name.toLowerCase().contains(searchQuery);
+                }).toList();
 
-            // GridView digunakan untuk menampilkan produk.
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(12),
-              itemCount: visibleProducts.length,
+                // Jika pencarian tidak menemukan produk, tampilkan pesan.
+                if (visibleProducts.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text('Produk tidak ditemukan.'),
+                  );
+                }
 
-              // GridDelegate mengatur jumlah kolom.
-              gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 0.70,
-              ),
+                // GridView menampilkan produk dalam dua kolom.
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(12),
+                  itemCount: visibleProducts.length,
+                  // SliverGridDelegate mengatur jumlah dan jarak kolom.
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.70,
+                  ),
+                  itemBuilder: (context, index) {
+                    final product = visibleProducts[index];
 
-              itemBuilder: (context, index) {
-                final product = visibleProducts[index];
-
-                // ProductCard menampilkan informasi kartu.
-                return ProductCard(
-                  product: product,
-
-                  // Tombol tambah kartu menjalankan addToCart.
-                  onAddToCart: () {
-                    addToCart(product);
+                    // ProductCard menampilkan produk dan tombol tambah.
+                    return ProductCard(product: product);
                   },
                 );
               },
             ),
+            // SizedBox memberi ruang di bawah daftar produk.
+            const SizedBox(height: 20),
           ],
-        ),
-      )
-          : Center(
-        // Halaman alternatif ketika tab bukan Home.
-        child: ElevatedButton(
-          // Tombol membuka Cart dengan Navigator.
-          onPressed: openCart,
-          child: const Text('Buka Keranjang'),
         ),
       ),
 
-      // BottomNavigationBar digunakan untuk berpindah menu.
+      // BottomNavigationBar menyediakan navigasi Home dan Cart.
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedIndex,
-
-        // State navigation berubah ketika menu ditekan.
+        currentIndex: 0,
         onTap: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-
-          // Jika user memilih Cart, buka CartPage.
+          // Index 0 kembali ke Home; index 1 membuka halaman keranjang.
           if (index == 1) {
             openCart();
           }
         },
-
         items: const [
-          // Menu Home.
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-
-          // Menu Cart.
+          // BottomNavigationBarItem mewakili menu Home.
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          // BottomNavigationBarItem mewakili menu Cart.
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Cart',
